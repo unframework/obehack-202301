@@ -40,7 +40,7 @@ void setup() {
   digitalWrite(LEDARRAY_DI, LOW);
 
   // turn on display
-  digitalWrite(LEDARRAY_EN, HIGH);
+  digitalWrite(LEDARRAY_EN, LOW);
 }
 
 void loop() {
@@ -51,7 +51,7 @@ void loop() {
     const int col = pos & 15;
     const int row = pos >> 4;
 
-    const int on = col & 1;
+    const int on = (col + row) & 1;
 
     digitalWrite(LEDARRAY_DI, on ? HIGH : LOW);
     digitalWrite(LEDARRAY_CLK, HIGH);
