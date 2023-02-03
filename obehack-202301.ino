@@ -6,9 +6,14 @@
 #define LEDARRAY_DI 2
 #define LEDARRAY_EN 16
 
+#define MASK_CLA (1 << LEDARRAY_CLA)
+#define MASK_CLK (1 << LEDARRAY_CLK)
+#define MASK_DI (1 << LEDARRAY_DI)
+
 #define ROWS 16
 #define COLS 16
 
+// actual LED layout corresponding to the shift register queue is complex and snaking, this is the LUT
 const unsigned char positions[ROWS * COLS] = {
   0x0f, 0x0e, 0x0d, 0x0c, 0x0b, 0x0a, 0x09, 0x08, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f,
   0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01, 0x00, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
@@ -43,8 +48,14 @@ void setup() {
   digitalWrite(LEDARRAY_EN, LOW);
 }
 
+unsigned int frame = 0;
+
+// per brightness level, how many frames are on out of a 64-frame full duty cycle
+// (note that the progression is very non-linear)
+unsigned int pwmDutyCounts[] = { 0, 1, 3, 7, 12, 24, 40, 64 };
+
 void loop() {
-  delay(100);
+  const int frameDuty = frame & 63;
 
   for (int idx = 0; idx < ROWS * COLS; idx++) {
     const int pos = positions[idx];
@@ -52,16 +63,28 @@ void loop() {
     const int row = pos >> 4;
 
     const int on = (col + row) & 1;
+    const int value = on ? (col >> 1) : 0;
 
-    digitalWrite(LEDARRAY_DI, on ? HIGH : LOW);
-    digitalWrite(LEDARRAY_CLK, HIGH);
-    delayMicroseconds(10);
-    digitalWrite(LEDARRAY_CLK, LOW);
-    delayMicroseconds(10);
+    const int pwmDuty = pwmDutyCounts[value];
+
+    // toggle on the frame if its PWM duty cycle is on
+    if ((frameDuty) < pwmDuty) {
+      GPOS = MASK_DI; // fast direct write set
+    } else {
+      GPOC = MASK_DI; // fast direct write clear
+    }
+
+    GPOS = MASK_CLK; // fast direct write set
+    GPOC = MASK_CLK; // fast direct write clear
+
+    // legacy slow write
+    // digitalWrite(LEDARRAY_DI, ((frame & 15) == 0 && on) ? HIGH : LOW);
+    // digitalWrite(LEDARRAY_CLK, HIGH);
+    // digitalWrite(LEDARRAY_CLK, LOW);
   }
 
   digitalWrite(LEDARRAY_CLA, HIGH);
-  delayMicroseconds(10);
   digitalWrite(LEDARRAY_CLA, LOW);
-  delayMicroseconds(10);
+
+  frame += 1;
 }
