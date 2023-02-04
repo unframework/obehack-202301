@@ -58,6 +58,20 @@ unsigned int pwmFrame = 0;
 unsigned int pwmDutyCounts[] = {0, 1, 3, 7, 12, 24, 40, 64};
 
 void setup() {
+  // LED panel
+  pinMode(LEDARRAY_CLA, OUTPUT);
+  pinMode(LEDARRAY_CLK, OUTPUT);
+  pinMode(LEDARRAY_DI, OUTPUT);
+  pinMode(LEDARRAY_EN, OUTPUT);
+
+  // initial state
+  digitalWrite(LEDARRAY_CLA, LOW);
+  digitalWrite(LEDARRAY_CLK, LOW);
+  digitalWrite(LEDARRAY_DI, LOW);
+
+  // turn on display
+  digitalWrite(LEDARRAY_EN, LOW);
+
   Serial.begin(115200);
   Serial.println();
 
@@ -79,19 +93,6 @@ void setup() {
     Serial.println("mDNS responder started");
   }
 
-  // LED panel
-  pinMode(LEDARRAY_CLA, OUTPUT);
-  pinMode(LEDARRAY_CLK, OUTPUT);
-  pinMode(LEDARRAY_DI, OUTPUT);
-  pinMode(LEDARRAY_EN, OUTPUT);
-
-  // initial state
-  digitalWrite(LEDARRAY_CLA, LOW);
-  digitalWrite(LEDARRAY_CLK, LOW);
-  digitalWrite(LEDARRAY_DI, LOW);
-
-  // turn on display
-  digitalWrite(LEDARRAY_EN, LOW);
 }
 
 void loop() {
