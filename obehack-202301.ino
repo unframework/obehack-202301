@@ -1,5 +1,18 @@
 // IKEA Obegraensad sketch 2023-01
 
+#include <ESP8266WiFi.h>
+#include <WiFiUdp.h>
+
+const char *ssid = "********";
+const char *password = "********";
+
+WiFiUDP UDP;
+unsigned int localUDPPort = 7007; // local port to listen on
+
+char incomingPacket[256]; // buffer for incoming packets
+char replyPacket[] =
+    "Hi there! Got the message :-)"; // a reply string to send back
+
 // ESP8266 Feather pinout
 #define LEDARRAY_CLA 4
 #define LEDARRAY_CLK 5
@@ -43,6 +56,22 @@ unsigned int pwmFrame = 0;
 unsigned int pwmDutyCounts[] = {0, 1, 3, 7, 12, 24, 40, 64};
 
 void setup() {
+  Serial.begin(115200);
+  Serial.println();
+
+  Serial.printf("Connecting to %s ", ssid);
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println(" connected");
+
+  UDP.begin(localUDPPort);
+  Serial.printf("Now listening at IP %s, UDP port %d\n",
+                WiFi.localIP().toString().c_str(), localUDPPort);
+
+  // LED panel
   pinMode(LEDARRAY_CLA, OUTPUT);
   pinMode(LEDARRAY_CLK, OUTPUT);
   pinMode(LEDARRAY_DI, OUTPUT);
@@ -58,6 +87,28 @@ void setup() {
 }
 
 void loop() {
+  // receive incoming UDP packet
+  const int packetSize = UDP.parsePacket();
+
+  if (packetSize) {
+    Serial.printf("Received %d bytes from %s, port %d\n", packetSize,
+                  UDP.remoteIP().toString().c_str(), UDP.remotePort());
+
+    const int len = UDP.read(incomingPacket, 255);
+    if (len > 0) {
+      incomingPacket[len] = 0;
+    }
+
+    Serial.printf("UDP packet contents: %s\n", incomingPacket);
+
+    // send back a reply, to the IP address and port we got the packet from
+    // UDP.beginPacket(UDP.remoteIP(), UDP.remotePort());
+    // UDP.write(replyPacket);
+    // UDP.endPacket();
+  }
+
+  return; // @todo this
+
   const int frameDuty = pwmFrame & 63;
 
   for (int idx = 0; idx < ROWS * COLS; idx++) {
