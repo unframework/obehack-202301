@@ -1,10 +1,12 @@
 // IKEA Obegraensad sketch 2023-01
 
 #include <ESP8266WiFi.h>
+#include <ESP8266mDNS.h>
 #include <WiFiUdp.h>
 
 const char *ssid = "********";
 const char *password = "********";
+const char *mDNSDomain = "esp8266";
 
 WiFiUDP UDP;
 unsigned int localUDPPort = 7007; // local port to listen on
@@ -70,6 +72,12 @@ void setup() {
   UDP.begin(localUDPPort);
   Serial.printf("Now listening at IP %s, UDP port %d\n",
                 WiFi.localIP().toString().c_str(), localUDPPort);
+
+  if (!MDNS.begin(mDNSDomain)) {
+    Serial.println("Error setting up MDNS responder!");
+  } else {
+    Serial.println("mDNS responder started");
+  }
 
   // LED panel
   pinMode(LEDARRAY_CLA, OUTPUT);
