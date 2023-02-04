@@ -36,6 +36,12 @@ const unsigned char positions[ROWS * COLS] = {
     // clang-format on
 };
 
+unsigned int pwmFrame = 0;
+
+// per brightness level, how many frames are on out of a 64-frame full duty
+// cycle (note that the progression is very non-linear)
+unsigned int pwmDutyCounts[] = {0, 1, 3, 7, 12, 24, 40, 64};
+
 void setup() {
   pinMode(LEDARRAY_CLA, OUTPUT);
   pinMode(LEDARRAY_CLK, OUTPUT);
@@ -51,14 +57,8 @@ void setup() {
   digitalWrite(LEDARRAY_EN, LOW);
 }
 
-unsigned int frame = 0;
-
-// per brightness level, how many frames are on out of a 64-frame full duty
-// cycle (note that the progression is very non-linear)
-unsigned int pwmDutyCounts[] = {0, 1, 3, 7, 12, 24, 40, 64};
-
 void loop() {
-  const int frameDuty = frame & 63;
+  const int frameDuty = pwmFrame & 63;
 
   for (int idx = 0; idx < ROWS * COLS; idx++) {
     const int pos = positions[idx];
@@ -89,5 +89,5 @@ void loop() {
   digitalWrite(LEDARRAY_CLA, HIGH);
   digitalWrite(LEDARRAY_CLA, LOW);
 
-  frame += 1;
+  pwmFrame += 1;
 }
