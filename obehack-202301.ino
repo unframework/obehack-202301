@@ -11,9 +11,7 @@ const char *mDNSDomain = "esp8266";
 WiFiUDP UDP;
 unsigned int localUDPPort = 7007; // local port to listen on
 
-char incomingPacket[256]; // buffer for incoming packets
-char replyPacket[] =
-    "Hi there! Got the message :-)"; // a reply string to send back
+char incomingFramePixels[256]; // buffer for incoming packet data
 
 // ESP8266 Feather pinout
 #define LEDARRAY_CLA 4
@@ -92,23 +90,18 @@ void setup() {
   } else {
     Serial.println("mDNS responder started");
   }
-
 }
 
 void loop() {
   // receive incoming UDP packet
+  // @todo move to another core
   const int packetSize = UDP.parsePacket();
 
   if (packetSize) {
-    Serial.printf("Received %d bytes from %s, port %d\n", packetSize,
-                  UDP.remoteIP().toString().c_str(), UDP.remotePort());
+    // Serial.printf("Received %d bytes from %s, port %d\n", packetSize,
+    //               UDP.remoteIP().toString().c_str(), UDP.remotePort());
 
-    const int len = UDP.read(incomingPacket, 255);
-    if (len > 0) {
-      incomingPacket[len] = 0;
-    }
-
-    Serial.printf("UDP packet contents: %s\n", incomingPacket);
+    const int len = UDP.read(incomingFramePixels, 256);
 
     // send back a reply, to the IP address and port we got the packet from
     // UDP.beginPacket(UDP.remoteIP(), UDP.remotePort());
@@ -116,17 +109,17 @@ void loop() {
     // UDP.endPacket();
   }
 
-  return; // @todo this
-
+  // render the frame
   const int frameDuty = pwmFrame & 63;
 
   for (int idx = 0; idx < ROWS * COLS; idx++) {
-    const int pos = positions[idx];
-    const int col = pos & 15;
-    const int row = pos >> 4;
+    const unsigned char pos = positions[idx];
+    // const int col = pos & 15;
+    // const int row = pos >> 4;
 
-    const int on = (col + row) & 1;
-    const int value = on ? (col >> 1) : 0;
+    // const int on = (col + row) & 1;
+    // const int value = on ? (col >> 1) : 0;
+    const int value = incomingFramePixels[pos] >> 5; // use top 3 bits
 
     const int pwmDuty = pwmDutyCounts[value];
 
