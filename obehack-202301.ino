@@ -118,6 +118,13 @@ void setup() {
   // turn on display
   digitalWrite(LEDARRAY_EN, LOW);
 
+  // setup render loop
+  timer1_attachInterrupt(onTimerISR);
+  timer1_enable(TIM_DIV16, TIM_EDGE,
+                TIM_SINGLE); // restarted inside frameloop itself
+  timer1_write(TIMER1_TICKS);
+
+  // proceed with other initialization
   Serial.begin(115200);
   Serial.println();
 
@@ -138,12 +145,6 @@ void setup() {
   } else {
     Serial.println("mDNS responder started");
   }
-
-  // setup render loop
-  timer1_attachInterrupt(onTimerISR);
-  timer1_enable(TIM_DIV16, TIM_EDGE,
-                TIM_SINGLE); // restarted inside frameloop itself
-  timer1_write(TIMER1_TICKS);
 }
 
 void loop() {
