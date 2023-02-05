@@ -31,6 +31,7 @@ char renderBuffer[256]; // pixel buffer, only lowest 3 bits should be used
 
 // actual LED layout corresponding to the shift register queue is complex and
 // snaking, this is the LUT
+// (credit: https://github.com/atesgoral/obegraensad-hack/blob/main/src/main.cpp#L41)
 const unsigned char positions[ROWS * COLS] = {
     // clang-format off
     0x0f, 0x0e, 0x0d, 0x0c, 0x0b, 0x0a, 0x09, 0x08, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f,
