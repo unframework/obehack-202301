@@ -26,8 +26,14 @@ char renderBuffer[256]; // pixel buffer, only lowest 3 bits should be used
 #define ROWS 16
 #define COLS 16
 
-// 130us or so at TIM_DIV16 setting
+// ticks at TIM_DIV16 setting (16 * 1us / 80 = 0.2us)
+#if defined(F_CPU) && (F_CPU == 160000000L)
+// faster timer for 160Mhz
+#define TIMER1_TICKS 500
+#else
+// lower than this and WDT gets triggered
 #define TIMER1_TICKS 700
+#endif
 
 // actual LED layout corresponding to the shift register queue is complex and
 // snaking, this is the LUT
@@ -93,6 +99,13 @@ void ICACHE_RAM_ATTR onTimerISR() {
 }
 
 void setup() {
+  // turn on 160Mhz for fun and profit! that is, a smoother PWM
+  #if defined(F_CPU) && (F_CPU == 160000000L)
+  system_update_cpu_freq(160);
+  // REG_SET_BIT(0x3ff00014, BIT(0));
+  // ets_update_cpu_frequency(160);
+  #endif
+
   // test pattern
   for (int pixel = 0; pixel < ROWS * COLS; pixel++) {
     const int col = pixel & 15;
