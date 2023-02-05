@@ -11,7 +11,7 @@ const char *mDNSDomain = "esp8266";
 WiFiUDP UDP;
 unsigned int localUDPPort = 7007; // local port to listen on
 
-char renderBuffer[256]; // pixel buffer, only lowest 3 bits should be used
+unsigned char inputBuffer[256]; // pixel buffer as received over UDP
 
 // ESP8266 Feather pinout
 #define LEDARRAY_CLA 4
@@ -59,6 +59,8 @@ const unsigned char positions[ROWS * COLS] = {
     // clang-format on
 };
 
+unsigned char renderQueue[256]; // pixel buffer arranged by physical LED layout, with duty cycle values
+
 unsigned int pwmFrame = 0;
 
 // per brightness level, how many frames are on out of a 64-frame full duty
@@ -72,10 +74,10 @@ void ICACHE_RAM_ATTR onTimerLoopISR() {
   const int frameDuty = pwmFrame & 63;
 
   for (int idx = 0; idx < ROWS * COLS; idx++) {
-    const unsigned char pos = positions[idx];
-    const int value = renderBuffer[pos]; // assume that this is a 3-bit value
-
-    const int pwmDuty = pwmDutyCounts[value];
+    // const unsigned char pos = positions[idx];
+    // const int value = renderBuffer[pos]; // assume that this is a 3-bit value
+    // const int pwmDuty = pwmDutyCounts[value];
+    const int pwmDuty = renderQueue[idx];
 
     // toggle on the frame if its PWM duty cycle is on
     if (frameDuty < pwmDuty) {
@@ -104,14 +106,18 @@ void setup() {
 
   // test pattern
   for (int pixel = 0; pixel < ROWS * COLS; pixel++) {
-    const int col = pixel & 15;
-    const int row = pixel >> 4;
+    const unsigned char pos = positions[pixel];
+
+    const int col = pos & 15;
+    const int row = pos >> 4;
 
     const unsigned char gradient = (col >> 1); // reduce to a 3-bit value
     const unsigned char value =
         (col + row) & 1 ? (row & 1 ? 7 - gradient : gradient) : 0;
 
-    renderBuffer[pixel] = value;
+    const int pwmDuty = pwmDutyCounts[value];
+
+    renderQueue[pixel] = pwmDuty;
   }
 
   // LED panel
@@ -163,9 +169,12 @@ void loop() {
   const int packetSize = UDP.parsePacket();
 
   if (packetSize) {
-    const int len = UDP.read(renderBuffer, 256);
+    const int len = UDP.read(inputBuffer, 256);
     for (int i = 0; i < len; i++) {
-      renderBuffer[i] >>= 5; // reduce to a 3-bit value
+      const unsigned char value = inputBuffer[i] >> 5; // reduce to a 3-bit value
+
+      const unsigned char pos = positions[i];
+      renderQueue[pos] = pwmDutyCounts[value]; // reduce to a 3-bit value
     }
   }
 }
