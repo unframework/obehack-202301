@@ -58,7 +58,7 @@ unsigned int pwmFrame = 0;
 // cycle (note that the progression is very non-linear)
 // full length is 256 to avoid weird memory access in case of over-limit pixel
 // values
-unsigned int pwmDutyCounts[256] = {0, 1, 3, 7, 12, 24, 40, 64};
+unsigned int pwmDutyCounts[256] = {0, 1, 3, 8, 14, 27, 36, 64};
 
 void ICACHE_RAM_ATTR onTimerISR() {
   // start countdown again right away to keep timing consistent
