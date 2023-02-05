@@ -26,6 +26,9 @@ char renderBuffer[256]; // pixel buffer, only lowest 3 bits should be used
 #define ROWS 16
 #define COLS 16
 
+// 220us at TIM_DIV16 setting
+#define TIMER1_TICKS 1100
+
 // actual LED layout corresponding to the shift register queue is complex and
 // snaking, this is the LUT
 const unsigned char positions[ROWS * COLS] = {
@@ -56,6 +59,37 @@ unsigned int pwmFrame = 0;
 // full length is 256 to avoid weird memory access in case of over-limit pixel
 // values
 unsigned int pwmDutyCounts[256] = {0, 1, 3, 7, 12, 24, 40, 64};
+
+void ICACHE_RAM_ATTR onTimerISR() {
+  // start countdown again right away to keep timing consistent
+  // @todo check for deadlock if frame takes too long?
+  timer1_write(TIMER1_TICKS);
+
+  // render the frame
+  const int frameDuty = pwmFrame & 63;
+
+  for (int idx = 0; idx < ROWS * COLS; idx++) {
+    const unsigned char pos = positions[idx];
+    const int value = renderBuffer[pos]; // assume that this is a 3-bit value
+
+    const int pwmDuty = pwmDutyCounts[value];
+
+    // toggle on the frame if its PWM duty cycle is on
+    if (frameDuty < pwmDuty) {
+      GPOS = MASK_DI; // fast direct write set
+    } else {
+      GPOC = MASK_DI; // fast direct write clear
+    }
+
+    GPOS = MASK_CLK; // fast direct write set
+    GPOC = MASK_CLK; // fast direct write clear
+  }
+
+  GPOS = MASK_CLA; // fast direct write set
+  GPOC = MASK_CLA; // fast direct write clear
+
+  pwmFrame += 1;
+}
 
 void setup() {
   // test pattern
@@ -104,6 +138,12 @@ void setup() {
   } else {
     Serial.println("mDNS responder started");
   }
+
+  // setup render loop
+  timer1_attachInterrupt(onTimerISR);
+  timer1_enable(TIM_DIV16, TIM_EDGE,
+                TIM_SINGLE); // restarted inside frameloop itself
+  timer1_write(TIMER1_TICKS);
 }
 
 void loop() {
@@ -117,29 +157,4 @@ void loop() {
       renderBuffer[i] >>= 5; // reduce to a 3-bit value
     }
   }
-
-  // render the frame
-  const int frameDuty = pwmFrame & 63;
-
-  for (int idx = 0; idx < ROWS * COLS; idx++) {
-    const unsigned char pos = positions[idx];
-    const int value = renderBuffer[pos]; // assume that this is a 3-bit value
-
-    const int pwmDuty = pwmDutyCounts[value];
-
-    // toggle on the frame if its PWM duty cycle is on
-    if (frameDuty < pwmDuty) {
-      GPOS = MASK_DI; // fast direct write set
-    } else {
-      GPOC = MASK_DI; // fast direct write clear
-    }
-
-    GPOS = MASK_CLK; // fast direct write set
-    GPOC = MASK_CLK; // fast direct write clear
-  }
-
-  GPOS = MASK_CLA; // fast direct write set
-  GPOC = MASK_CLA; // fast direct write clear
-
-  pwmFrame += 1;
 }
