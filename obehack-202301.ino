@@ -112,18 +112,10 @@ void loop() {
   const int packetSize = UDP.parsePacket();
 
   if (packetSize) {
-    // Serial.printf("Received %d bytes from %s, port %d\n", packetSize,
-    //               UDP.remoteIP().toString().c_str(), UDP.remotePort());
-
     const int len = UDP.read(renderBuffer, 256);
     for (int i = 0; i < len; i++) {
       renderBuffer[i] >>= 5; // reduce to a 3-bit value
     }
-
-    // send back a reply, to the IP address and port we got the packet from
-    // UDP.beginPacket(UDP.remoteIP(), UDP.remotePort());
-    // UDP.write(replyPacket);
-    // UDP.endPacket();
   }
 
   // render the frame
@@ -131,17 +123,12 @@ void loop() {
 
   for (int idx = 0; idx < ROWS * COLS; idx++) {
     const unsigned char pos = positions[idx];
-    // const int col = pos & 15;
-    // const int row = pos >> 4;
-
-    // const int on = (col + row) & 1;
-    // const int value = on ? (col >> 1) : 0;
     const int value = renderBuffer[pos]; // assume that this is a 3-bit value
 
     const int pwmDuty = pwmDutyCounts[value];
 
     // toggle on the frame if its PWM duty cycle is on
-    if ((frameDuty) < pwmDuty) {
+    if (frameDuty < pwmDuty) {
       GPOS = MASK_DI; // fast direct write set
     } else {
       GPOC = MASK_DI; // fast direct write clear
@@ -149,15 +136,10 @@ void loop() {
 
     GPOS = MASK_CLK; // fast direct write set
     GPOC = MASK_CLK; // fast direct write clear
-
-    // legacy slow write
-    // digitalWrite(LEDARRAY_DI, ((frame & 15) == 0 && on) ? HIGH : LOW);
-    // digitalWrite(LEDARRAY_CLK, HIGH);
-    // digitalWrite(LEDARRAY_CLK, LOW);
   }
 
-  digitalWrite(LEDARRAY_CLA, HIGH);
-  digitalWrite(LEDARRAY_CLA, LOW);
+  GPOS = MASK_CLA; // fast direct write set
+  GPOC = MASK_CLA; // fast direct write clear
 
   pwmFrame += 1;
 }
