@@ -26,8 +26,8 @@ char renderBuffer[256]; // pixel buffer, only lowest 3 bits should be used
 #define ROWS 16
 #define COLS 16
 
-// 220us at TIM_DIV16 setting
-#define TIMER1_TICKS 1100
+// 130us or so at TIM_DIV16 setting
+#define TIMER1_TICKS 700
 
 // actual LED layout corresponding to the shift register queue is complex and
 // snaking, this is the LUT
