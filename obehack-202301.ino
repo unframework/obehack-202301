@@ -67,11 +67,7 @@ unsigned int pwmFrame = 0;
 // values
 unsigned int pwmDutyCounts[256] = {0, 1, 3, 8, 14, 27, 36, 64};
 
-void ICACHE_RAM_ATTR onTimerISR() {
-  // start countdown again right away to keep timing consistent
-  // @todo check for deadlock if frame takes too long?
-  timer1_write(TIMER1_TICKS);
-
+void ICACHE_RAM_ATTR onTimerLoopISR() {
   // render the frame
   const int frameDuty = pwmFrame & 63;
 
@@ -133,9 +129,9 @@ void setup() {
   digitalWrite(LEDARRAY_EN, LOW);
 
   // setup render loop
-  timer1_attachInterrupt(onTimerISR);
+  timer1_attachInterrupt(onTimerLoopISR);
   timer1_enable(TIM_DIV16, TIM_EDGE,
-                TIM_SINGLE); // restarted inside frameloop itself
+                TIM_LOOP); // keep repeating automatically
   timer1_write(TIMER1_TICKS);
 
   // proceed with other initialization
