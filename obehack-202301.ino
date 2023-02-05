@@ -11,7 +11,7 @@ const char *mDNSDomain = "esp8266";
 WiFiUDP UDP;
 unsigned int localUDPPort = 7007; // local port to listen on
 
-char renderBuffer[256]; // pixel buffer
+char renderBuffer[256]; // pixel buffer, only lowest 3 bits should be used
 
 // ESP8266 Feather pinout
 #define LEDARRAY_CLA 4
@@ -53,7 +53,9 @@ unsigned int pwmFrame = 0;
 
 // per brightness level, how many frames are on out of a 64-frame full duty
 // cycle (note that the progression is very non-linear)
-unsigned int pwmDutyCounts[] = {0, 1, 3, 7, 12, 24, 40, 64};
+// full length is 256 to avoid weird memory access in case of over-limit pixel
+// values
+unsigned int pwmDutyCounts[256] = {0, 1, 3, 7, 12, 24, 40, 64};
 
 void setup() {
   // test pattern
@@ -61,9 +63,9 @@ void setup() {
     const int col = pixel & 15;
     const int row = pixel >> 4;
 
-    const unsigned char gradient = (col << 4); // multiply up to a 0..255 value
+    const unsigned char gradient = (col >> 1); // reduce to a 3-bit value
     const unsigned char value =
-        (col + row) & 1 ? (row & 1 ? 255 - gradient : gradient) : 0;
+        (col + row) & 1 ? (row & 1 ? 7 - gradient : gradient) : 0;
 
     renderBuffer[pixel] = value;
   }
@@ -114,6 +116,9 @@ void loop() {
     //               UDP.remoteIP().toString().c_str(), UDP.remotePort());
 
     const int len = UDP.read(renderBuffer, 256);
+    for (int i = 0; i < len; i++) {
+      renderBuffer[i] >>= 5; // reduce to a 3-bit value
+    }
 
     // send back a reply, to the IP address and port we got the packet from
     // UDP.beginPacket(UDP.remoteIP(), UDP.remotePort());
@@ -131,7 +136,7 @@ void loop() {
 
     // const int on = (col + row) & 1;
     // const int value = on ? (col >> 1) : 0;
-    const int value = renderBuffer[pos] >> 5; // use top 3 bits
+    const int value = renderBuffer[pos]; // assume that this is a 3-bit value
 
     const int pwmDuty = pwmDutyCounts[value];
 
