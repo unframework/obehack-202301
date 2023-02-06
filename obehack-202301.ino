@@ -27,8 +27,9 @@ unsigned char inputBuffer[256]; // pixel buffer as received over UDP
 #define COLS 16
 
 // ticks at TIM_DIV16 setting (16 * 1us / 80 = 0.2us)
-// (lower than this and WDT gets triggered, regardless of CPU speed)
-#define TIMER1_TICKS 700
+// (minimum GPIO time is about 80-100us because each IO write takes 8 or so CPU
+// cycles)
+#define TIMER1_TICKS 500
 
 // actual LED layout corresponding to the shift register queue is complex and
 // snaking, this is the LUT
@@ -54,24 +55,35 @@ const unsigned char positions[ROWS * COLS] = {
     // clang-format on
 };
 
-unsigned char renderQueue[256]; // pixel buffer arranged by physical LED layout, with duty cycle values
+unsigned char renderQueue[256]; // pixel buffer arranged by physical LED layout,
+                                // with duty cycle values
 
-unsigned int pwmFrame = 0;
+unsigned int pwmStep = 0; // cycling through "stop points"
 
-// per brightness level, how many frames are on out of a 64-frame full duty
+// per brightness level, how many frames are on out of an N-frame full duty
 // cycle (note that the progression is very non-linear)
 // full length is 256 to avoid weird memory access in case of over-limit pixel
 // values
-unsigned int pwmDutyCounts[256] = {0, 1, 3, 8, 14, 27, 36, 64};
+#define MAX_DUTY_FRAME 64
+unsigned int pwmDutyCounts[256] = {0, 1, 3, 8, 14, 27, 36, MAX_DUTY_FRAME};
 
 void ICACHE_RAM_ATTR onTimerISR() {
-  // start countdown again right away to keep timing consistent
-  // @todo check for deadlock if frame takes too long?
-  timer1_write(TIMER1_TICKS);
+  const unsigned int frameDuty = pwmDutyCounts[pwmStep];
+
+  // increment PWM step and overflow back to zero when we hit the max
+  pwmStep++;
+  const unsigned int nextFrameDuty = pwmDutyCounts[pwmStep];
+
+  if (nextFrameDuty >= MAX_DUTY_FRAME) {
+    pwmStep = 0;
+  }
+
+  // start countdown to next PWM duty cycle - note that this is variable
+  // as the target brightness increases, and the
+  // longer delays are also needed to allow other processing to happen
+  timer1_write((nextFrameDuty - frameDuty) * TIMER1_TICKS);
 
   // render the frame
-  const int frameDuty = pwmFrame & 63;
-
   for (int idx = 0; idx < ROWS * COLS; idx++) {
     // const unsigned char pos = positions[idx];
     // const int value = renderBuffer[pos]; // assume that this is a 3-bit value
@@ -79,6 +91,8 @@ void ICACHE_RAM_ATTR onTimerISR() {
     const int pwmDuty = renderQueue[idx];
 
     // toggle on the frame if its PWM duty cycle is on
+    // @todo this could be optimized further to e.g. combine data + CLK set
+    // but that would require setting GPO instead of GPOS/GPOC
     if (frameDuty < pwmDuty) {
       GPOS = MASK_DI; // fast direct write set
     } else {
@@ -91,18 +105,9 @@ void ICACHE_RAM_ATTR onTimerISR() {
 
   GPOS = MASK_CLA; // fast direct write set
   GPOC = MASK_CLA; // fast direct write clear
-
-  pwmFrame += 1;
 }
 
 void setup() {
-  // turn on 160Mhz for fun and profit! that is, a smoother PWM
-  #if defined(F_CPU) && (F_CPU == 160000000L)
-  system_update_cpu_freq(160);
-  // REG_SET_BIT(0x3ff00014, BIT(0));
-  // ets_update_cpu_frequency(160);
-  #endif
-
   // test pattern
   for (int pixel = 0; pixel < ROWS * COLS; pixel++) {
     const unsigned char pos = positions[pixel];
@@ -170,7 +175,8 @@ void loop() {
   if (packetSize) {
     const int len = UDP.read(inputBuffer, 256);
     for (int i = 0; i < len; i++) {
-      const unsigned char value = inputBuffer[i] >> 5; // reduce to a 3-bit value
+      const unsigned char value =
+          inputBuffer[i] >> 5; // reduce to a 3-bit value
 
       const unsigned char pos = positions[i];
       renderQueue[pos] = pwmDutyCounts[value]; // reduce to a 3-bit value
