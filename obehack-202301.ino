@@ -27,13 +27,8 @@ unsigned char inputBuffer[256]; // pixel buffer as received over UDP
 #define COLS 16
 
 // ticks at TIM_DIV16 setting (16 * 1us / 80 = 0.2us)
-#if defined(F_CPU) && (F_CPU == 160000000L)
-// faster timer for 160Mhz
-#define TIMER1_TICKS 500
-#else
-// lower than this and WDT gets triggered
+// (lower than this and WDT gets triggered, regardless of CPU speed)
 #define TIMER1_TICKS 700
-#endif
 
 // actual LED layout corresponding to the shift register queue is complex and
 // snaking, this is the LUT
