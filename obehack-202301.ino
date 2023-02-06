@@ -27,9 +27,9 @@ unsigned char inputBuffer[256]; // pixel buffer as received over UDP
 #define COLS 16
 
 // ticks at TIM_DIV16 setting (16 * 1us / 80 = 0.2us)
-// (minimum GPIO time is about 80-100us because each IO write takes 8 or so CPU
-// cycles)
-#define TIMER1_TICKS 500
+// (minimum GPIO time is about 50-60us because each IO write takes 8 or so CPU
+// cycles or 100ns, and we use two writes per pixel)
+#define TIMER1_TICKS 300
 
 // actual LED layout corresponding to the shift register queue is complex and
 // snaking, this is the LUT
@@ -64,8 +64,8 @@ unsigned int pwmStep = 0; // cycling through "stop points"
 // cycle (note that the progression is very non-linear)
 // full length is 256 to avoid weird memory access in case of over-limit pixel
 // values
-#define MAX_DUTY_FRAME 64
-unsigned int pwmDutyCounts[256] = {0, 1, 3, 8, 14, 27, 36, MAX_DUTY_FRAME};
+#define MAX_DUTY_FRAME 128
+unsigned int pwmDutyCounts[256] = {0, 1, 6, 16, 28, 54, 72, MAX_DUTY_FRAME};
 
 void ICACHE_RAM_ATTR onTimerISR() {
   const unsigned int frameDuty = pwmDutyCounts[pwmStep];
@@ -85,21 +85,11 @@ void ICACHE_RAM_ATTR onTimerISR() {
 
   // render the frame
   for (int idx = 0; idx < ROWS * COLS; idx++) {
-    // const unsigned char pos = positions[idx];
-    // const int value = renderBuffer[pos]; // assume that this is a 3-bit value
-    // const int pwmDuty = pwmDutyCounts[value];
     const int pwmDuty = renderQueue[idx];
 
     // toggle on the frame if its PWM duty cycle is on
-    // @todo this could be optimized further to e.g. combine data + CLK set
-    // but that would require setting GPO instead of GPOS/GPOC
-    if (frameDuty < pwmDuty) {
-      GPOS = MASK_DI; // fast direct write set
-    } else {
-      GPOC = MASK_DI; // fast direct write clear
-    }
-
-    GPOS = MASK_CLK; // fast direct write set
+    // we combine data bit + CLK rising edge into one IO write to GPO
+    GPO = ((frameDuty < pwmDuty) << LEDARRAY_DI) | MASK_CLK;
     GPOC = MASK_CLK; // fast direct write clear
   }
 
