@@ -65,7 +65,7 @@ unsigned int pwmStep = 0; // cycling through "stop points"
 // full length is 256 to avoid weird memory access in case of over-limit pixel
 // values
 #define MAX_DUTY_FRAME 128
-unsigned int pwmDutyCounts[256] = {0, 1, 6, 16, 28, 54, 72, MAX_DUTY_FRAME};
+unsigned int pwmDutyCounts[256] = {0, 1, 3, 10, 25, 54, 72, MAX_DUTY_FRAME};
 
 void ICACHE_RAM_ATTR onTimerISR() {
   const unsigned int frameDuty = pwmDutyCounts[pwmStep];
