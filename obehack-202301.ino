@@ -164,12 +164,14 @@ void loop() {
 
   if (packetSize) {
     const int len = UDP.read(inputBuffer, 256);
-    for (int i = 0; i < len; i++) {
-      const unsigned char value =
-          inputBuffer[i] >> 5; // reduce to a 3-bit value
+    if (len == 256) {
+      for (int i = 0; i < 256; i++) {
+        const unsigned char pos = positions[i];
+        const unsigned char value =
+            inputBuffer[pos] >> 5; // reduce to a 3-bit value
 
-      const unsigned char pos = positions[i];
-      renderQueue[pos] = pwmDutyCounts[value]; // reduce to a 3-bit value
+        renderQueue[i] = pwmDutyCounts[value]; // reduce to a 3-bit value
+      }
     }
   }
 }
