@@ -13,11 +13,27 @@ unsigned int localUDPPort = 7007; // local port to listen on
 
 unsigned char inputBuffer[256]; // pixel buffer as received over UDP
 
+#ifdef ARDUINO_ESP8266_ADAFRUIT_HUZZAH
+
 // ESP8266 Feather pinout
 #define LEDARRAY_CLA 4
 #define LEDARRAY_CLK 5
 #define LEDARRAY_DI 2
 #define LEDARRAY_EN 16
+
+#elif ARDUINO_ESP8266_NODEMCU_ESP12E
+
+// ESP8266 NodeMCU ESP-12E pinout
+#define LEDARRAY_CLA 0
+#define LEDARRAY_CLK 4
+#define LEDARRAY_DI 5
+#define LEDARRAY_EN 16
+
+#else
+
+#error unknown board pinout
+
+#endif
 
 #define MASK_CLA (1 << LEDARRAY_CLA)
 #define MASK_CLK (1 << LEDARRAY_CLK)
