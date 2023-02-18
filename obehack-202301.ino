@@ -122,7 +122,7 @@ void setup() {
   // convert render buffer into raw physically-arranged PWM duty couns
   for (int pixel = 0; pixel < ROWS * COLS; pixel++) {
     const unsigned char pos = positions[pixel];
-    const unsigned char value = renderBuffer[pos];
+    const unsigned char value = renderBuffer[pos] >> 5; // reduce to 3 bits
 
     const int pwmDuty = pwmDutyCounts[value];
     renderQueue[pixel] = pwmDuty;
