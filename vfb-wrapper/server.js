@@ -18,7 +18,7 @@ app.post('/build', (req, res) => {
       '-e',
       '-c',
       [
-        `rm -f "${BUILD_DIR}/*"`,
+        `rm -f ${BUILD_DIR}/*`,
         `emcc vfb_main.cpp effects/renderer.cpp -o build/${outJSFile} -sEXPORT_ES6 -sEXPORTED_RUNTIME_METHODS=ccall,cwrap`,
       ].join('&&'),
     ],
