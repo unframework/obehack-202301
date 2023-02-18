@@ -30,14 +30,14 @@ const fills = [
   '#ffffff',
 ];
 
-export const VFBCanvas: React.FC<{ buffer: Uint8Array }> = ({ buffer }) => {
-  if (buffer.length !== 256) {
-    throw new Error('expecting 256 byte render buffer');
-  }
+export type VFBRenderCallback = () => Uint8Array;
 
+export const VFBCanvas: React.FC<{ render: VFBRenderCallback }> = ({
+  render,
+}) => {
   // stash inside ref to avoid resetting effect
-  const bufferRef = useRef(buffer);
-  bufferRef.current = buffer;
+  const rendererRef = useRef(render);
+  rendererRef.current = render;
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -57,13 +57,19 @@ export const VFBCanvas: React.FC<{ buffer: Uint8Array }> = ({ buffer }) => {
       ctx.fillStyle = 'rgba(0,0,0,0.25)';
       ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
-      const currentBuffer = bufferRef.current; // local var for speed
+      // render and get the buffer
+      const buffer = rendererRef.current(); // local var for speed
+      if (buffer.length !== 256) {
+        cancelAnimationFrame(currentCallbackId);
+        throw new Error('expecting 256 byte render buffer');
+      }
 
+      // blit onto the canvas
       for (let i = 0; i < 256; i++) {
         const row = i >> 4;
         const col = i & 15;
 
-        const value = currentBuffer[i] >> 4;
+        const value = buffer[i] >> 4;
 
         ctx.fillStyle = fills[value];
         ctx.fillRect(

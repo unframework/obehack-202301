@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 
-import { VFBCanvas } from './VFBCanvas';
+import { VFBCanvas, VFBRenderCallback } from './VFBCanvas';
 
 const CODE_SERVER_URL = '/api'; // proxied http://localhost:3000/
 
@@ -13,6 +13,10 @@ interface VFBRendererModule extends EmscriptenModule {
 }
 
 export const App = () => {
+  const [vfbRenderer, setVFBRenderer] = useState<VFBRenderCallback>(
+    () => () => dummyBuffer
+  );
+
   useEffect(() => {
     // wait before importing, in case this gets unmounted early
     let debounceTimeoutId = -1;
@@ -31,18 +35,20 @@ export const App = () => {
       const m = await factory();
       console.log('initialized Emscripten code', m);
 
-      // WASM memory is not expected to grow dynamically
+      // get the allocated render buffer view
       const renderBufferPtr = m.ccall('getVirtualBuffer', 'number', [], []);
       const renderView = m.HEAPU8.subarray(
         renderBufferPtr,
         renderBufferPtr + 256
       );
 
-      console.log('before', renderView);
       const renderer = m.cwrap('renderVirtualBuffer', null, ['number']);
 
-      renderer(renderBufferPtr);
-      console.log('after', renderView);
+      // set the state (wrap in another callback for useState)
+      setVFBRenderer(() => () => {
+        renderer(renderBufferPtr);
+        return renderView;
+      });
     });
 
     return () => {
@@ -54,7 +60,7 @@ export const App = () => {
   return (
     <div className="flex flex-column justify-center items-center w-full h-full">
       <div className="flex border border-neutral-600">
-        <VFBCanvas buffer={dummyBuffer} />
+        <VFBCanvas render={vfbRenderer} />
       </div>
     </div>
   );
