@@ -12,7 +12,6 @@ COPY vfb-wrapper/ ./vfb-wrapper/
 WORKDIR ./vfb-wrapper
 
 COPY effects.h ./
-COPY effects ./effects
 
 VOLUME ./effects
 
@@ -21,4 +20,4 @@ EXPOSE 3000
 CMD node server.js
 
 # host command: docker run -it -p 3000:3000 -v ./effects:/src/vfb-wrapper/effects imagename
-# docker build -t emtest2 . && docker run -it -p 3000:3000 -v ./effects:/src/vfb-wrapper/effects emtest2
+# docker build -t emtest2 . ; docker run --name emtest2 -it -p 3000:3000 -v ./effects:/src/vfb-wrapper/effects emtest2
