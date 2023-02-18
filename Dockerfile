@@ -13,14 +13,12 @@ WORKDIR ./vfb-wrapper
 
 COPY effects.h ./
 COPY effects ./effects
-RUN mkdir -p ./build
 
 VOLUME ./effects
-
-RUN emcc vfb_main.cpp effects/renderer.cpp -o build/vfb_main.js -sEXPORT_ES6 -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
 
 # artifact server
 EXPOSE 3000
 CMD node server.js
 
 # host command: docker run -it -p 3000:3000 -v ./effects:/src/vfb-wrapper/effects imagename
+# docker build -t emtest2 . && docker run -it -p 3000:3000 -v ./effects:/src/vfb-wrapper/effects emtest2
