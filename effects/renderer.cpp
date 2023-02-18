@@ -1,4 +1,4 @@
-#include "renderer.h"
+#include "../effects.h"
 
 void render16x16(unsigned char *buffer) {
   // test pattern

@@ -4,7 +4,7 @@
 
 #include <emscripten.h>
 
-#include "renderer.h"
+#include "effects.h"
 
 // render buffer exposed from WASM to JS
 unsigned char virtualBuffer[256] = "012345";

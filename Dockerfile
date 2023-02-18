@@ -9,13 +9,17 @@ RUN apt-get update
 RUN npm install --global serve
 
 COPY vfb-wrapper/ ./vfb-wrapper/
-COPY renderer.cpp renderer.h ./vfb-wrapper/
 WORKDIR ./vfb-wrapper
 
-RUN emcc vfb_main.cpp renderer.cpp -o vfb_main.js -sEXPORT_ES6 -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
+COPY effects.h ./
+COPY effects ./effects
+
+VOLUME ./effects
+
+RUN emcc vfb_main.cpp effects/renderer.cpp -o vfb_main.js -sEXPORT_ES6 -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
 
 # artifact server
 EXPOSE 3000
 CMD npx serve --listen 3000 --no-clipboard
 
-# host command: docker run -it -p 3000:3000 imagename
+# host command: docker run -it -p 3000:3000 -v ./effects:/src/vfb-wrapper/effects imagename
