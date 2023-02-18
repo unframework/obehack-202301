@@ -14,40 +14,40 @@ interface VFBRendererModule extends EmscriptenModule {
 
 export const App = () => {
   useEffect(() => {
-    let unmounted = false;
+    // wait before importing, in case this gets unmounted early
+    let debounceTimeoutId = -1;
+    const debouncePromise = new Promise<void>((resolve) => {
+      debounceTimeoutId = window.setTimeout(resolve, 300);
+    });
 
-    import(/* webpackIgnore: true */ `${CODE_SERVER_URL}/vfb_main.js`).then(
-      (vfbModule) => {
-        // check if already unmounted
-        if (unmounted) {
-          return;
-        }
+    debouncePromise.then(async () => {
+      // proceed to import module code and initialize it
+      const vfbModule = await import(
+        /* webpackIgnore: true */ `${CODE_SERVER_URL}/vfb_main.js`
+      );
+      console.log('imported module');
 
-        console.log('imported module');
+      const factory: () => Promise<VFBRendererModule> = vfbModule.default;
+      const m = await factory();
+      console.log('initialized Emscripten code', m);
 
-        const factory: () => Promise<VFBRendererModule> = vfbModule.default;
+      // WASM memory is not expected to grow dynamically
+      const renderBufferPtr = m.ccall('getVirtualBuffer', 'number', [], []);
+      const renderView = m.HEAPU8.subarray(
+        renderBufferPtr,
+        renderBufferPtr + 256
+      );
 
-        factory().then((m) => {
-          console.log('initialized Emscripten code', m);
+      console.log('before', renderView);
+      const renderer = m.cwrap('renderVirtualBuffer', null, ['number']);
 
-          // WASM memory is not expected to grow dynamically
-          const renderBufferPtr = m.ccall('getVirtualBuffer', 'number', [], []);
-          const renderView = m.HEAPU8.subarray(
-            renderBufferPtr,
-            renderBufferPtr + 256
-          );
-
-          console.log('before', renderView);
-          const renderer = m.cwrap('renderVirtualBuffer', null, ['number']);
-
-          renderer(renderBufferPtr);
-          console.log('after', renderView);
-        });
-      }
-    );
+      renderer(renderBufferPtr);
+      console.log('after', renderView);
+    });
 
     return () => {
-      unmounted = true;
+      // prevent debounce promise from resolving after timeout
+      clearTimeout(debounceTimeoutId);
     };
   }, []);
 
