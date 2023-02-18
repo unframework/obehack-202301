@@ -25,9 +25,23 @@ export const App = () => {
     });
 
     debouncePromise.then(async () => {
+      // trigger module build
+      const modulePath = await fetch(`${CODE_SERVER_URL}/build`, {
+        method: 'POST',
+      }).then((response) => {
+        if (!response.ok) {
+          response.text().then((err) => console.error('got', err));
+          throw new Error('bad build response');
+        }
+
+        return response.text();
+      });
+
+      console.log('built module', modulePath);
+
       // proceed to import module code and initialize it
       const vfbModule = await import(
-        /* webpackIgnore: true */ `${CODE_SERVER_URL}/vfb_main.js`
+        /* webpackIgnore: true */ `${CODE_SERVER_URL}${modulePath}`
       );
       console.log('imported module');
 
