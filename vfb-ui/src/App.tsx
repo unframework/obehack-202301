@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 
 import { VFBCanvas } from './VFBCanvas';
 
-const CODE_SERVER_URL = 'http://localhost:3000';
+const CODE_SERVER_URL = '/api'; // proxied http://localhost:3000/
 
 const dummyBuffer = new Uint8Array(256);
 dummyBuffer[2] = 123;
