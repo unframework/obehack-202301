@@ -1,3 +1,7 @@
+#
+# Build for web viewer
+#
+
 .PHONY:=all clean
 
 ifndef OBJDIR
@@ -8,18 +12,35 @@ ifndef OUTPUTFILE
 $(error need to define OUTPUTFILE)
 endif
 
+SRCDIR=.
+FASTLED_DIR=${SRCDIR}/FastLED/src
+
 CXXFLAGS:=
 LDFLAGS+=-sEXPORT_ES6 -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
 
-SOURCES=$(wildcard *.cpp)
-SOURCES+=$(wildcard effects/*.cpp)
+# main sources -> objects
+SOURCES=$(wildcard ${SRCDIR}/*.cpp)
+SOURCES+=$(wildcard ${SRCDIR}/effects/*.cpp)
 
-OBJECTS=$(SOURCES:%.cpp=${OBJDIR}/%.o)
+OBJECTS=$(SOURCES:${SRCDIR}/%.cpp=${OBJDIR}/%.o)
 
-$(OBJDIR)/%.o: %.cpp
+$(OBJDIR)/%.o: ${SRCDIR}/%.cpp
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $< -c -o $@
 
+# FastLED sources -> objects
+FASTLED_SOURCES+=\
+	${FASTLED_DIR}/noise.cpp \
+	${FASTLED_DIR}/lib8tion.cpp
+FASTLED_OBJDIR=${OBJDIR}/FastLED
+
+OBJECTS+=$(FASTLED_SOURCES:${FASTLED_DIR}/%.cpp=${FASTLED_OBJDIR}/%.o)
+
+$(FASTLED_OBJDIR)/%.o: ${FASTLED_DIR}/%.cpp
+	@mkdir -p $(@D)
+	$(CXX) $(CXXFLAGS) -D FASTLED_NO_MCU -D ARDUINO $< -c -o $@
+
+# main executable output
 $(OBJDIR)/$(OUTPUTFILE): $(OBJECTS)
 	mkdir -p $(OBJDIR)
 	$(CXX) $(OBJECTS) $(CXXFLAGS) $(LDFLAGS) -o $@

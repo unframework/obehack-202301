@@ -8,6 +8,13 @@ RUN apt-get update
 # cache NPM dependencies
 RUN npm install --no-save express
 
+# clone the FastLED library with NO_MCU platform
+RUN git clone \
+  --single-branch \
+  --branch add_host_platform \
+  https://github.com/jandelgado/FastLED.git \
+  ./vfb-wrapper/FastLED
+
 COPY vfb-wrapper/ ./vfb-wrapper/
 WORKDIR ./vfb-wrapper
 
