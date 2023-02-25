@@ -1,5 +1,6 @@
 #
 # Build for web viewer
+# Portions (c) copyright 2020 Jan Delgado
 #
 
 .PHONY:=all clean
@@ -29,6 +30,7 @@ $(OBJDIR)/%.o: ${SRCDIR}/%.cpp
 	$(CXX) $(CXXFLAGS) $< -c -o $@
 
 # FastLED sources -> objects
+# (using additional options for NO_MCU headers and defines)
 FASTLED_SOURCES+=\
 	${FASTLED_DIR}/noise.cpp \
 	${FASTLED_DIR}/lib8tion.cpp
@@ -38,7 +40,12 @@ OBJECTS+=$(FASTLED_SOURCES:${FASTLED_DIR}/%.cpp=${FASTLED_OBJDIR}/%.o)
 
 $(FASTLED_OBJDIR)/%.o: ${FASTLED_DIR}/%.cpp
 	@mkdir -p $(@D)
-	$(CXX) $(CXXFLAGS) -D FASTLED_NO_MCU -D ARDUINO $< -c -o $@
+	$(CXX) $(CXXFLAGS) \
+		-D FASTLED_NO_MCU \
+		-D ARDUINO \
+		-I${SRCDIR}/fl-headers \
+		-c \
+		$< -o $@
 
 # main executable output
 $(OBJDIR)/$(OUTPUTFILE): $(OBJECTS)
