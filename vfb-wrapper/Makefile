@@ -16,7 +16,12 @@ endif
 SRCDIR=.
 FASTLED_DIR=${SRCDIR}/FastLED/src
 
-CXXFLAGS:=
+CXXFLAGS:=\
+	-I${FASTLED_DIR} \
+	-I${SRCDIR}/fl-headers \
+	-D FASTLED_NO_MCU \
+	-D ARDUINO \
+
 LDFLAGS+=-sEXPORT_ES6 -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
 
 # main sources -> objects
@@ -30,7 +35,6 @@ $(OBJDIR)/%.o: ${SRCDIR}/%.cpp
 	$(CXX) $(CXXFLAGS) $< -c -o $@
 
 # FastLED sources -> objects
-# (using additional options for NO_MCU headers and defines)
 FASTLED_SOURCES+=\
 	${FASTLED_DIR}/noise.cpp \
 	${FASTLED_DIR}/lib8tion.cpp
@@ -40,12 +44,7 @@ OBJECTS+=$(FASTLED_SOURCES:${FASTLED_DIR}/%.cpp=${FASTLED_OBJDIR}/%.o)
 
 $(FASTLED_OBJDIR)/%.o: ${FASTLED_DIR}/%.cpp
 	@mkdir -p $(@D)
-	$(CXX) $(CXXFLAGS) \
-		-D FASTLED_NO_MCU \
-		-D ARDUINO \
-		-I${SRCDIR}/fl-headers \
-		-c \
-		$< -o $@
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 # main executable output
 $(OBJDIR)/$(OUTPUTFILE): $(OBJECTS)
