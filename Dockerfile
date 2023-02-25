@@ -20,7 +20,11 @@ WORKDIR ./vfb-wrapper
 
 COPY effects.h ./
 
-VOLUME ./effects
+# test make command
+# COPY effects/ ./effects/
+# RUN OBJDIR=./tmpdist OUTPUTFILE=test.js emmake make all
+
+VOLUME /src/vfb-wrapper/effects
 
 # artifact server
 EXPOSE 3000

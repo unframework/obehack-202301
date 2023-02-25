@@ -8,7 +8,7 @@ void render16x16(unsigned char *buffer) {
     const int col = pos & 15;
     const int row = pos >> 4;
 
-    const unsigned char value = inoise8(col, row);
+    const unsigned char value = inoise8(col * 50, row * 50);
     // const unsigned char gradient = (col << 4); // expand to full 8 bits
     // const unsigned char antiGradient = ((15 - col) << 4); // expand to full 8 bits
     // const unsigned char value =
