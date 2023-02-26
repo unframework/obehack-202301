@@ -5,6 +5,10 @@
 
 #include <cstdint>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define MIN(a,b) ((a)<(b)?(a):(b))
 
 uint32_t micros();
@@ -24,5 +28,9 @@ void yield();
 #define register
 #define INPUT 0
 #define OUTPUT 1
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
 
 #endif

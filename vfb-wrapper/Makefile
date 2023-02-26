@@ -23,6 +23,7 @@ CXXFLAGS:=\
 	-D ARDUINO \
 
 LDFLAGS+=-sEXPORT_ES6 -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
+LDFLAGS+=--js-library shims.js
 
 # main sources -> objects
 SOURCES=$(wildcard ${SRCDIR}/*.cpp)
