@@ -1,21 +1,17 @@
 #include <FastLED.h>
+#include <Arduino.h>
 
 #include "../effects.h"
 
 void render16x16(unsigned char *buffer) {
-  const unsigned long t01 = millis() / 10;
+  const unsigned long tFract = millis() >> 2;
 
   // test pattern
   for (int pos = 0; pos < ROWS * COLS; pos++) {
     const int col = pos & 15;
     const int row = pos >> 4;
 
-    const unsigned char value = inoise8(col * 50, row * 50, t01);
-    // const unsigned char gradient = (col << 4); // expand to full 8 bits
-    // const unsigned char antiGradient = ((15 - col) << 4); // expand to full 8 bits
-    // const unsigned char value =
-    //     (col + row) & 1 ? (row & 1 ? antiGradient : gradient) : 0;
-
-    buffer[pos] = value;
+    const unsigned short value = qsub8(inoise8(col * 50, row * 1500, tFract), 16);
+    buffer[pos] = value > 144 ? 255 : (value * 4) / 3; // scale by 1.25
   }
 }
