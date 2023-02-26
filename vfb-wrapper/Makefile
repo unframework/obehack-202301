@@ -13,25 +13,33 @@ ifndef OUTPUTFILE
 $(error need to define OUTPUTFILE)
 endif
 
-SRCDIR=.
-FASTLED_DIR=${SRCDIR}/FastLED/src
+SKETCH_DIR=../sketch
+FASTLED_DIR=./FastLED/src
 
 CXXFLAGS:=\
+	-I${SKETCH_DIR} \
 	-I${FASTLED_DIR} \
-	-I${SRCDIR}/fl-headers \
+	-I./fl-headers \
 	-D FASTLED_NO_MCU \
 	-D ARDUINO \
 
 LDFLAGS+=-sEXPORT_ES6 -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
 LDFLAGS+=--js-library shims.js
 
-# main sources -> objects
-SOURCES=$(wildcard ${SRCDIR}/*.cpp)
-SOURCES+=$(wildcard ${SRCDIR}/effects/*.cpp)
+# wrapper source -> object
+OBJECTS+=$(OBJDIR)/vfb_main.o
 
-OBJECTS=$(SOURCES:${SRCDIR}/%.cpp=${OBJDIR}/%.o)
+$(OBJDIR)/vfb_main.o: vfb_main.cpp
+	@mkdir -p $(@D)
+	$(CXX) $(CXXFLAGS) $< -c -o $@
 
-$(OBJDIR)/%.o: ${SRCDIR}/%.cpp
+# sketch sources -> objects
+SKETCH_SOURCES+=$(wildcard ${SKETCH_DIR}/*.cpp)
+SKETCH_SOURCES+=$(wildcard ${SKETCH_DIR}/effects/*.cpp)
+
+OBJECTS+=$(SKETCH_SOURCES:${SKETCH_DIR}/%.cpp=${OBJDIR}/%.o)
+
+$(OBJDIR)/%.o: ${SKETCH_DIR}/%.cpp
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $< -c -o $@
 

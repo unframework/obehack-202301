@@ -18,17 +18,15 @@ RUN git clone \
 COPY vfb-wrapper/ ./vfb-wrapper/
 WORKDIR ./vfb-wrapper
 
-COPY effects.h ./
-
 # test make command
-# COPY effects/ ./effects/
+# COPY src/ /src/sketch
 # RUN OBJDIR=./tmpdist OUTPUTFILE=test.js emmake make all
 
-VOLUME /src/vfb-wrapper/effects
+VOLUME /src/sketch
 
 # artifact server
 EXPOSE 3000
 CMD node server.js
 
-# host command: docker run -it -p 3000:3000 -v ./effects:/src/vfb-wrapper/effects imagename
-# docker build -t emtest2 . ; docker run --name emtest2 -it -p 3000:3000 -v ./effects:/src/vfb-wrapper/effects emtest2
+# host command: docker run --rm -it -p 3000:3000 -v ./src:/src/sketch imagename
+# docker build -t emtest3 . ; docker run --rm -it -p 3000:3000 -v $PWD\src:/src/sketch emtest3
