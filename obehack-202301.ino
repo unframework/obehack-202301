@@ -15,6 +15,8 @@ unsigned int localUDPPort = 7007; // local port to listen on
 
 unsigned char inputBuffer[256]; // pixel buffer as received over UDP
 
+#define AMBIENCE_WAIT_MS 5000
+
 #ifdef ARDUINO_ESP8266_ADAFRUIT_HUZZAH
 
 // ESP8266 Feather pinout
@@ -126,10 +128,14 @@ void updateRenderQueue(unsigned char *buffer) {
   }
 }
 
+unsigned long lastReceivedFrameTime = 0;
+
 void setup() {
   // test pattern
   render16x16(renderBuffer);
   updateRenderQueue(renderBuffer);
+
+  lastReceivedFrameTime = millis();
 
   // LED panel
   pinMode(LEDARRAY_CLA, OUTPUT);
@@ -175,13 +181,23 @@ void setup() {
 }
 
 void loop() {
+  const unsigned long currentTime = millis();
+
   // receive incoming UDP packet
   const int packetSize = UDP.parsePacket();
 
   if (packetSize) {
+    // reset ambience countdown while we are receiving data
+    lastReceivedFrameTime = currentTime;
+
     const int len = UDP.read(inputBuffer, 256);
     if (len == 256) {
       updateRenderQueue(inputBuffer);
     }
+  }
+
+  if (currentTime - lastReceivedFrameTime > AMBIENCE_WAIT_MS) {
+    render16x16(renderBuffer);
+    updateRenderQueue(renderBuffer);
   }
 }
