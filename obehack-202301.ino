@@ -115,18 +115,21 @@ void ICACHE_RAM_ATTR onTimerISR() {
   GPOC = MASK_CLA; // fast direct write clear
 }
 
-void setup() {
-  // test pattern
-  render16x16(renderBuffer);
-
-  // convert render buffer into raw physically-arranged PWM duty couns
+void updateRenderQueue(unsigned char *buffer) {
+  // convert render buffer into raw physically-arranged PWM duty counts
   for (int pixel = 0; pixel < ROWS * COLS; pixel++) {
     const unsigned char pos = positions[pixel];
-    const unsigned char value = renderBuffer[pos] >> 5; // reduce to 3 bits
+    const unsigned char value = buffer[pos] >> 5; // reduce to 3 bits
 
     const int pwmDuty = pwmDutyCounts[value];
     renderQueue[pixel] = pwmDuty;
   }
+}
+
+void setup() {
+  // test pattern
+  render16x16(renderBuffer);
+  updateRenderQueue(renderBuffer);
 
   // LED panel
   pinMode(LEDARRAY_CLA, OUTPUT);
@@ -173,19 +176,12 @@ void setup() {
 
 void loop() {
   // receive incoming UDP packet
-  // @todo move to another core
   const int packetSize = UDP.parsePacket();
 
   if (packetSize) {
     const int len = UDP.read(inputBuffer, 256);
     if (len == 256) {
-      for (int i = 0; i < 256; i++) {
-        const unsigned char pos = positions[i];
-        const unsigned char value =
-            inputBuffer[pos] >> 5; // reduce to a 3-bit value
-
-        renderQueue[i] = pwmDutyCounts[value]; // reduce to a 3-bit value
-      }
+      updateRenderQueue(inputBuffer);
     }
   }
 }
