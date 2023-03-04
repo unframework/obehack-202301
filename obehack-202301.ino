@@ -4,8 +4,8 @@
 #include <ESP8266mDNS.h>
 #include <WiFiUdp.h>
 
-#include "src/effects.h";
-#include "src/led.h";
+#include "src/effects.h"
+#include "src/led.h"
 
 const char *ssid = "********";
 const char *password = "********";

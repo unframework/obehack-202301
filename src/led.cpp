@@ -1,7 +1,7 @@
-#include <Arduino.h>;
+#include <Arduino.h>
 
-#include "led.h";
-#include "effects.h";
+#include "effects.h"
+#include "led.h"
 
 #ifdef ARDUINO_ESP8266_ADAFRUIT_HUZZAH
 
@@ -120,7 +120,6 @@ void initLEDOutput() {
   timer1_enable(TIM_DIV16, TIM_EDGE,
                 TIM_SINGLE); // restarted inside frameloop itself
   timer1_write(TIMER1_TICKS);
-
 }
 
 void updateRenderQueue(unsigned char *buffer) {
