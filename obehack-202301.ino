@@ -4,6 +4,8 @@
 #include <ESP8266mDNS.h>
 #include <WiFiUdp.h>
 
+#include "src/effects.h";
+
 const char *ssid = "********";
 const char *password = "********";
 const char *mDNSDomain = "esp8266";
@@ -39,8 +41,8 @@ unsigned char inputBuffer[256]; // pixel buffer as received over UDP
 #define MASK_CLK (1 << LEDARRAY_CLK)
 #define MASK_DI (1 << LEDARRAY_DI)
 
-#define ROWS 16
-#define COLS 16
+// simple 16x16 render buffer
+unsigned char renderBuffer[256];
 
 // ticks at TIM_DIV16 setting (16 * 1us / 80 = 0.2us)
 // (minimum GPIO time is about 50-60us because each IO write takes 8 or so CPU
@@ -115,18 +117,14 @@ void ICACHE_RAM_ATTR onTimerISR() {
 
 void setup() {
   // test pattern
+  render16x16(renderBuffer);
+
+  // convert render buffer into raw physically-arranged PWM duty couns
   for (int pixel = 0; pixel < ROWS * COLS; pixel++) {
     const unsigned char pos = positions[pixel];
-
-    const int col = pos & 15;
-    const int row = pos >> 4;
-
-    const unsigned char gradient = (col >> 1); // reduce to a 3-bit value
-    const unsigned char value =
-        (col + row) & 1 ? (row & 1 ? 7 - gradient : gradient) : 0;
+    const unsigned char value = renderBuffer[pos] >> 5; // reduce to 3 bits
 
     const int pwmDuty = pwmDutyCounts[value];
-
     renderQueue[pixel] = pwmDuty;
   }
 
