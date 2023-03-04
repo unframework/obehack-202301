@@ -33,8 +33,7 @@ $(OBJDIR)/vfb_main.o: vfb_main.cpp
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $< -c -o $@
 
-# sketch sources -> objects
-SKETCH_SOURCES+=$(wildcard ${SKETCH_DIR}/*.cpp)
+# sketch sources -> objects (just the effects folder)
 SKETCH_SOURCES+=$(wildcard ${SKETCH_DIR}/effects/*.cpp)
 
 OBJECTS+=$(SKETCH_SOURCES:${SKETCH_DIR}/%.cpp=${OBJDIR}/%.o)
