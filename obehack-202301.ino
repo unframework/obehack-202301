@@ -21,14 +21,25 @@ unsigned char inputBuffer[256]; // pixel buffer as received over UDP
 // simple 16x16 render buffer
 unsigned char renderBuffer[256];
 
-unsigned long lastReceivedFrameTime = 0;
+unsigned long ambienceStartTime = 0;
+
+void ambienceResetCountdown() {
+  ambienceStartTime = millis() + AMBIENCE_WAIT_MS;
+}
+
+void ambienceYield() {
+  const unsigned long currentTime = millis();
+
+  if (currentTime > ambienceStartTime) {
+    render16x16(renderBuffer);
+    updateRenderQueue(renderBuffer);
+  }
+}
 
 void setup() {
   // test pattern
   render16x16(renderBuffer);
   updateRenderQueue(renderBuffer);
-
-  lastReceivedFrameTime = millis();
 
   // start the hardware display loop
   initLEDOutput();
@@ -38,42 +49,55 @@ void setup() {
   Serial.println();
 
   Serial.printf("Connecting to %s ", ssid);
+  ambienceYield();
+
   WiFi.begin(ssid, password);
+  ambienceYield();
+
+  unsigned int idleReportCounter = 0;
   while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
+    ambienceYield();
+
+    delay(1);
+
+    idleReportCounter++;
+    if ((idleReportCounter & 0x3ff) == 0) {
+      idleReportCounter = 0;
+      Serial.print(".");
+    }
   }
+
   Serial.println(" connected");
+  ambienceYield();
 
   UDP.begin(localUDPPort);
+  ambienceYield();
+
   Serial.printf("Now listening at IP %s, UDP port %d\n",
                 WiFi.localIP().toString().c_str(), localUDPPort);
 
   if (!MDNS.begin(mDNSDomain)) {
+    ambienceYield();
     Serial.println("Error setting up MDNS responder!");
   } else {
+    ambienceYield();
     Serial.println("mDNS responder started");
   }
 }
 
 void loop() {
-  const unsigned long currentTime = millis();
+  ambienceYield();
 
   // receive incoming UDP packet
   const int packetSize = UDP.parsePacket();
 
   if (packetSize) {
     // reset ambience countdown while we are receiving data
-    lastReceivedFrameTime = currentTime;
+    ambienceResetCountdown();
 
     const int len = UDP.read(inputBuffer, 256);
     if (len == 256) {
       updateRenderQueue(inputBuffer);
     }
-  }
-
-  if (currentTime - lastReceivedFrameTime > AMBIENCE_WAIT_MS) {
-    render16x16(renderBuffer);
-    updateRenderQueue(renderBuffer);
   }
 }
