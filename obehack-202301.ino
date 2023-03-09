@@ -4,11 +4,21 @@
 #include <ESP8266mDNS.h>
 #include <WiFiUdp.h>
 
-#include "src/effects.h";
-#include "src/led.h";
+#include "arduino_secrets.h"
+#include "src/effects.h"
+#include "src/led.h"
 
-const char *ssid = "********";
-const char *password = "********";
+/*
+
+Sample arduino_secrets.h:
+
+#define SECRET_SSID "mySSID"
+#define SECRET_PASSWORD "password123"
+
+*/
+const char *ssid = SECRET_SSID;
+const char *password = SECRET_PASSWORD;
+
 const char *mDNSDomain = "esp8266";
 
 WiFiUDP UDP;

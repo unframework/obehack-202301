@@ -1,2 +1,6 @@
+# secrets stored by Arduino convention
+arduino_secrets.h
+
+# previewer UI temp files
 /vfb-ui/node_modules
 /vfb-ui/dist
