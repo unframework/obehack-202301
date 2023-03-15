@@ -1,10 +1,11 @@
 const { spawn } = require('child_process');
 const express = require('express');
 
-const BUILD_DIR = `${__dirname}/build`;
+const OBJ_DIR = `${__dirname}/build`;
+const OUT_DIR = `${__dirname}/dist`;
 
 const app = express();
-app.use(express.static(BUILD_DIR));
+app.use(express.static(OUT_DIR));
 app.post('/build', (req, res) => {
   // build the new file
   const outJSFile = `vfb${Date.now()}.js`;
@@ -14,7 +15,7 @@ app.post('/build', (req, res) => {
     [
       '-e',
       '-c',
-      `OBJDIR=${BUILD_DIR} OUTPUTFILE=${outJSFile} emmake make all`,
+      `OBJDIR=${OBJ_DIR} OUTPUTDIR=${OUT_DIR} OUTPUTFILE=${outJSFile} emmake make all`,
     ]
   );
 
