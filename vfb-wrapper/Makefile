@@ -9,11 +9,14 @@ ifndef OBJDIR
 $(error need to define OBJDIR)
 endif
 
+ifndef OUTPUTDIR
+$(error need to define OUTPUTDIR)
+endif
 ifndef OUTPUTFILE
 $(error need to define OUTPUTFILE)
 endif
 
-SKETCH_DIR=../sketch
+SKETCH_DIR=./sketch/src
 FASTLED_DIR=./FastLED/src
 
 CXXFLAGS:=\
@@ -55,12 +58,13 @@ $(FASTLED_OBJDIR)/%.o: ${FASTLED_DIR}/%.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 # main executable output
-$(OBJDIR)/$(OUTPUTFILE): $(OBJECTS)
-	mkdir -p $(OBJDIR)
+$(OUTPUTDIR)/$(OUTPUTFILE): $(OBJECTS)
+	@mkdir -p $(@D)
 	$(CXX) $(OBJECTS) $(CXXFLAGS) $(LDFLAGS) -o $@
 
 clean:
 	@mkdir -p $(OBJDIR)
+	@mkdir -p $(OUTPUTDIR)
 	rm -f $(OBJDIR)/**/*
 
-all: clean $(OBJDIR)/$(OUTPUTFILE)
+all: clean $(OUTPUTDIR)/$(OUTPUTFILE)

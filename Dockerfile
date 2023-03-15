@@ -13,20 +13,19 @@ RUN git clone \
   --single-branch \
   --branch add_host_platform \
   https://github.com/jandelgado/FastLED.git \
-  ./vfb-wrapper/FastLED
+  ./FastLED
 
-COPY vfb-wrapper/ ./vfb-wrapper/
-WORKDIR ./vfb-wrapper
+COPY vfb-wrapper/ ./
 
 # test make command
-# COPY src/ /src/sketch
+# COPY src/ /src/sketch/src/
 # RUN OBJDIR=./tmpdist OUTPUTFILE=test.js emmake make all
 
-VOLUME /src/sketch
+VOLUME /src/sketch/src
 
 # artifact server
 EXPOSE 3000
 CMD node server.js
 
-# host command: docker run --rm -it -p 3000:3000 -v ./src:/src/sketch imagename
-# docker build -t emtest3 . ; docker run --rm -it -p 3000:3000 -v $PWD\src:/src/sketch emtest3
+# host command: docker run --rm -it -p 3000:3000 -v ./src:/src/sketch/src imagename
+# docker build -t obehack . ; docker run --rm -it -p 3000:3000 -v $PWD\src:/src/sketch/src obehack
