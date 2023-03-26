@@ -14,9 +14,9 @@ void render16x16(unsigned char *buffer) {
 
     // wispy smoke effect on white bg
     const float noiseX =
-        (float)inoise16(col * 4000, row * 0x1000 + tFract * 0x500, 0) / 0x10000;
+        (float)inoise16(col * 7000, row * 0x3000 + tFract * 0x800, 0) / 0x10000;
     const float dispAmountX = noiseX - 0.5f;
-    const float displacedX = col + dispAmountX * 21.0f * (1.2f - row * 0.0625f);
+    const float displacedX = col + dispAmountX * 21.0f * (.4f + (ROWS - row) * 0.08f);
 
     const unsigned char value =
         255 *
