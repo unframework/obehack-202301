@@ -16,12 +16,19 @@ void render16x16(unsigned char *buffer) {
     const float noiseX =
         (float)inoise16(col * 7000, row * 0x3000 + tFract * 0x800, 0) / 0x10000;
     const float dispAmountX = noiseX - 0.5f;
-    const float displacedX = col + dispAmountX * 21.0f * (.4f + (ROWS - row) * 0.08f);
+    const float displacedX =
+        col + dispAmountX * 21.0f * (.4f + (ROWS - row) * 0.08f);
+
+    // @todo feed a vertical displacement (noiseY) into this
+    const float noiseV = fmin(
+        1.0f, row * (0.4f / ROWS) +
+                  (float)inoise16(0x80000, row * 0x3000 + tFract * 0x800, 0) /
+                      0x10000);
 
     const unsigned char value =
-        255 *
-        (1.0f - fmax(0, fmin(1.0f, fmin(displacedX - 6.0f, 9.0f - displacedX) *
-                                       1.2f)));
+        255 * (1.0f - noiseV * fmax(0, fmin(1.0f, fmin(displacedX - 6.0f,
+                                                       9.0f - displacedX) *
+                                                      1.2f)));
     // value = displacedX > 6.5f && displacedX < 8.5f ? 255 : 0;
 
     buffer[pos] = value;
