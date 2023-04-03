@@ -15,7 +15,7 @@ RUN git clone \
   https://github.com/jandelgado/FastLED.git \
   ./FastLED
 
-COPY vfb-wrapper/ ./
+COPY ./ ./
 
 # test make command
 # COPY src/ /src/sketch/src/
@@ -26,6 +26,3 @@ VOLUME /src/sketch/src
 # artifact server
 EXPOSE 3000
 CMD node server.js
-
-# host command: docker run --rm -it -p 3000:3000 -v ./src:/src/sketch/src imagename
-# docker build -t obehack . ; docker run --rm -it -p 3000:3000 -v $PWD\src:/src/sketch/src obehack
