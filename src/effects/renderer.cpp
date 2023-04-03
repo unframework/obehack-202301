@@ -30,7 +30,7 @@ void render16x16(unsigned char *buffer) {
 
       const float dispAmountX = noiseX - 0.5f;
       const float displacedX =
-          col + dispAmountX * 21.0f * (.2f + invrow * 0.05f);
+          col + dispAmountX * 21.0f * fmax(0.0f, .1f + invrow * 0.06f);
 
       // @todo feed a vertical displacement (noiseY) into this
       const float noiseV =
@@ -49,5 +49,16 @@ void render16x16(unsigned char *buffer) {
     // value = displacedX > 6.5f && displacedX < 8.5f ? 255 : 0;
 
     buffer[pos] = value;
+  }
+
+  // flame flicker
+  for (int i = 0; i < 4; i++) {
+    const long pos = (15 << 4) | (i + 6);
+    const long yLookup = tFract * 0x800;
+    const float noiseF =
+        (float)inoise16(0x180000 + i * 0x8000, yLookup, 0) / 0x10000;
+
+    buffer[pos] = 255 * fmax(fmax(0.0f, fabs(i - 1.5f) - 1.0f),
+                             fmin(0.8f, noiseF * 6.0f - 3.0f));
   }
 }
