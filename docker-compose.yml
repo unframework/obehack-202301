@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  vfb-wrapper:
+    build: ./vfb-wrapper
+    ports:
+      - '3000:3000'
+    networks:
+      - vfb-network
+    volumes:
+      - ./src:/src/sketch/src
+
+  vfb-ui:
+    build: ./vfb-ui
+    ports:
+      - '8080:8080'
+    depends_on:
+      - vfb-wrapper
+    networks:
+      - vfb-network
+    environment:
+      - VFB_WRAPPER_URL=http://vfb-wrapper:3000
+
+networks:
+  vfb-network:

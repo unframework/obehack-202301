@@ -33,7 +33,7 @@ module.exports = {
   devServer: {
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
+        target: process.env.VFB_WRAPPER_URL,
         pathRewrite: { '^/api': '' },
       },
     },
