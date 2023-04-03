@@ -2,15 +2,10 @@
 
 ## Dev
 
-Run builder:
+Run services:
 
 ```
-docker build -t obehack .
-docker run --rm -it -p 3000:3000 -v $PWD\src:/src/sketch/src obehack
+docker-compose up
 ```
 
-Run webapp:
-
-```
-(cd vfb-ui && yarn start)
-```
+Go to http://localhost:8080.
