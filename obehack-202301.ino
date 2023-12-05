@@ -5,6 +5,7 @@
 #include <WiFiUdp.h>
 
 #include "arduino_secrets.h"
+#include "src/button.h"
 #include "src/effects.h"
 #include "src/led.h"
 
@@ -44,9 +45,20 @@ void ambienceYield() {
     render16x16(renderBuffer);
     updateRenderQueue(renderBuffer);
   }
+
+  updateButton();
+
+  // shut down if needed
+  if (buttonState.longPressedJustNow) {
+    stopLEDOutput();
+    ESP.deepSleep(0);
+  }
 }
 
 void setup() {
+  // button and reference pin
+  initButton();
+
   // test pattern
   render16x16(renderBuffer);
   updateRenderQueue(renderBuffer);

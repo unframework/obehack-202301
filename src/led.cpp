@@ -29,6 +29,11 @@
 #define MASK_CLK (1 << LEDARRAY_CLK)
 #define MASK_DI (1 << LEDARRAY_DI)
 
+// pin 14 is used in the button circuit as a pull-up voltage for reset pin -
+// must stay high
+// @todo move this and make it cleaner somehow
+#define MASK_BUTTON_REF (1 << 14)
+
 // ticks at TIM_DIV16 setting (16 * 1us / 80 = 0.2us)
 // (minimum GPIO time is about 50-60us because each IO write takes 8 or so CPU
 // cycles or 100ns, and we use two writes per pixel)
@@ -92,7 +97,8 @@ void ICACHE_RAM_ATTR onTimerISR() {
 
     // toggle on the frame if its PWM duty cycle is on
     // we combine data bit + CLK rising edge into one IO write to GPO
-    GPO = ((frameDuty < pwmDuty) << LEDARRAY_DI) | MASK_CLK;
+    // @todo for now, also keeping button reference voltage up
+    GPO = ((frameDuty < pwmDuty) << LEDARRAY_DI) | MASK_CLK | MASK_BUTTON_REF;
     GPOC = MASK_CLK; // fast direct write clear
   }
 
@@ -131,4 +137,9 @@ void updateRenderQueue(unsigned char *buffer) {
     const int pwmDuty = pwmDutyCounts[value];
     renderQueue[pixel] = pwmDuty;
   }
+}
+
+void stopLEDOutput() {
+  // turn off display
+  digitalWrite(LEDARRAY_EN, HIGH);
 }
