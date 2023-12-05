@@ -44,7 +44,7 @@ void render16x16(unsigned char *buffer) {
     }
 
     accum /= 2.0f;
-    const unsigned char value = 255 * accum;
+    const unsigned char value = 255 - 255 * accum;
 
     // value = displacedX > 6.5f && displacedX < 8.5f ? 255 : 0;
 
@@ -58,7 +58,7 @@ void render16x16(unsigned char *buffer) {
     const float noiseF =
         (float)inoise16(0x180000 + i * 0x8000, yLookup, 0) / 0x10000;
 
-    buffer[pos] = 255 * fmax(fmax(0.0f, fabs(i - 1.5f) - 1.0f),
-                             fmin(0.8f, noiseF * 6.0f - 3.0f));
+    buffer[pos] = 255 - 255 * fmax(fmax(0.0f, fabs(i - 1.5f) - 1.0f),
+                                   fmin(0.8f, noiseF * 6.0f - 3.0f));
   }
 }
