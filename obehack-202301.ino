@@ -49,7 +49,7 @@ void ambienceYield() {
   updateButton();
 
   // shut down if needed
-  if (buttonState.longPressedJustNow) {
+  if (buttonState.released) {
     stopLEDOutput();
     ESP.deepSleep(0);
   }

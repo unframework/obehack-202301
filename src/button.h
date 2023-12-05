@@ -4,5 +4,6 @@ void initButton();
 void updateButton();
 
 extern struct buttonState_t {
-  bool longPressedJustNow;
+  bool pressed;
+  bool released;
 } buttonState;

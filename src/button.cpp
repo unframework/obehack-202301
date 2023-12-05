@@ -15,12 +15,8 @@
 #endif
 
 int buttonLowCount = 0;
-const int buttonLowTriggerCount = 5; // 10ms
-bool pressed = false;
-unsigned long buttonStartMillis = 0;
-bool longPressed = false;
-
-const unsigned long buttonLongPressMillis = 3000;
+const int buttonLowTriggerCount = 15;
+bool pressedState = false;
 
 void initButton() {
   pinMode(BUTTON_SENSE, INPUT);
@@ -30,12 +26,15 @@ void initButton() {
   pinMode(BUTTON_REF, OUTPUT);
 }
 
-struct buttonState_t buttonState = {false};
+struct buttonState_t buttonState = {
+    false, // pressed
+    false, // released
+};
 
 void updateButton() {
   int buttonPinState = digitalRead(BUTTON_SENSE);
 
-  bool newPressed = pressed;
+  bool newPressed = pressedState;
   if (buttonPinState == LOW) {
     buttonLowCount = max(buttonLowTriggerCount, buttonLowCount + 1);
     if (buttonLowCount >= buttonLowTriggerCount) {
@@ -48,27 +47,16 @@ void updateButton() {
     }
   }
 
-  if (newPressed != pressed) {
-    pressed = newPressed;
+  buttonState.pressed = false;
+  buttonState.released = false;
 
-    // @todo report early-up event
-    buttonState.longPressedJustNow = true;
-  } else {
-    buttonState.longPressedJustNow = false;
+  if (newPressed != pressedState) {
+    pressedState = newPressed;
+
+    if (pressedState) {
+      buttonState.pressed = true;
+    } else {
+      buttonState.released = true;
+    }
   }
-
-  // report long-press event (as a one-time thing)
-  // const unsigned long curTime = millis();
-  // const bool newLongPressed =
-  //     buttonStartMillis ? (curTime - buttonStartMillis) >=
-  //     buttonLongPressMillis
-  //                       : false;
-
-  // buttonState.longPressedJustNow = false;
-  // if (!longPressed != newLongPressed) {
-  //   longPressed = newLongPressed;
-  //   if (longPressed) {
-  //     buttonState.longPressedJustNow = true;
-  //   }
-  // }
 }
