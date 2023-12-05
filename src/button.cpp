@@ -31,7 +31,7 @@ struct buttonState_t buttonState = {
     false, // released
 };
 
-void updateButton() {
+void updateBaseButton() {
   int buttonPinState = digitalRead(BUTTON_SENSE);
 
   bool newPressed = pressedState;
@@ -59,4 +59,43 @@ void updateButton() {
       buttonState.released = true;
     }
   }
+}
+
+unsigned long longPressStartTime = 0;
+bool longPressedState = false;
+
+struct buttonState_t longPressState = {
+    false, // pressed
+    false, // released
+};
+
+void updateLongPressed() {
+  if (buttonState.pressed) {
+    longPressStartTime = millis();
+  } else if (buttonState.released) {
+    longPressStartTime = 0;
+  }
+
+  bool newLongPressed = longPressedState;
+  if (longPressStartTime) {
+    newLongPressed =
+        newLongPressed || ((millis() - longPressStartTime) >= 3000);
+  } else {
+    newLongPressed = false;
+  }
+
+  if (newLongPressed != longPressedState) {
+    longPressedState = newLongPressed;
+
+    if (longPressedState) {
+      longPressState.pressed = true;
+    } else {
+      longPressState.released = true;
+    }
+  }
+}
+
+void updateButton() {
+  updateBaseButton();
+  updateLongPressed();
 }

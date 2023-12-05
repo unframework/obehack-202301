@@ -3,7 +3,12 @@ void initButton();
 
 void updateButton();
 
-extern struct buttonState_t {
+// reflects the momentary change from the last frame
+// (i.e. pressed/released are true only until the next call to updateButton())
+struct buttonState_t {
   bool pressed;
   bool released;
-} buttonState;
+};
+
+extern struct buttonState_t buttonState;
+extern struct buttonState_t longPressState;

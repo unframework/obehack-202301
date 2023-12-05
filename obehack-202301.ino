@@ -48,9 +48,14 @@ void ambienceYield() {
 
   updateButton();
 
-  // shut down if needed
-  if (buttonState.released) {
+  // when long-press is detected, shut down display to signal power-down
+  if (longPressState.pressed) {
     stopLEDOutput();
+  }
+
+  // only when long-press is *released* do the actual power-down (this helps
+  // avoid reset pin jitter due to button noise)
+  if (longPressState.released) {
     ESP.deepSleep(0);
   }
 }
