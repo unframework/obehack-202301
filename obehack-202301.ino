@@ -28,14 +28,17 @@ unsigned int localUDPPort = 7007; // local port to listen on
 unsigned char inputBuffer[256]; // pixel buffer as received over UDP
 
 #define AMBIENCE_WAIT_MS 5000
+#define INACTIVITY_WAIT_MS (60 * 60000)
 
 // simple 16x16 render buffer
 unsigned char renderBuffer[256];
 
 unsigned long ambienceStartTime = 0;
+unsigned long inactivityTime = 0;
 
 void ambienceResetCountdown() {
   ambienceStartTime = millis() + AMBIENCE_WAIT_MS;
+  inactivityTime = ambienceStartTime + INACTIVITY_WAIT_MS;
 }
 
 void ambienceYield() {
@@ -46,7 +49,17 @@ void ambienceYield() {
     updateRenderQueue(renderBuffer);
   }
 
+  if (currentTime > inactivityTime) {
+    stopLEDOutput();
+    ESP.deepSleep(0);
+  }
+
   updateButton();
+
+  // bump inactivity timeout as needed
+  if (buttonState.pressed || buttonState.released) {
+    inactivityTime = currentTime + INACTIVITY_WAIT_MS;
+  }
 
   // when long-press is detected, shut down display to signal power-down
   if (longPressState.pressed) {
@@ -61,6 +74,9 @@ void ambienceYield() {
 }
 
 void setup() {
+  // initial inactivity timeout
+  inactivityTime = millis() + INACTIVITY_WAIT_MS;
+
   // button and reference pin
   initButton();
 
